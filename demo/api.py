@@ -4,34 +4,6 @@ from frappe.permissions import has_permission
 from frappe import _
 
 
-# @frappe.whitelist(allow_guest = True, methods =     ['GET'] )
-# def search_in_doctype(doctype, query, limit=10):
-#     """
-#     Search within a specified doctype using the Name and Title fields.
-#     Returns a list of matching records if the user has permission.
-#     """
-#     if not doctype or not query:
-#         return []
-    
-#     user = frappe.session.user
-    
-#     if not frappe.has_permission(doctype, user=user):
-#         frappe.throw("Not permitted", frappe.PermissionError)
-    
-    
-#     meta = frappe.get_meta(doctype)
-#     title_field = meta.title_field if meta.title_field else "name"
-    
-#     query_filter = f"%{query}%"
-#     results = frappe.db.sql(f"""
-#         SELECT name, {title_field} as title
-#         FROM `tab{doctype}`
-#         WHERE name LIKE %(query)s OR {title_field} LIKE %(query)s
-#         LIMIT %(limit)s
-#     """, {"query": query_filter, "limit": limit}, as_dict=True)
-    
-#     return results
-
 @frappe.whitelist(allow_guest=True)
 def search_in_doctype(doctype, query, limit=10):
     """
@@ -40,22 +12,16 @@ def search_in_doctype(doctype, query, limit=10):
     """
     if not doctype or not query:
         return []
-
+    
     user = frappe.session.user
-
-
-    if user == "Guest":
-        if not frappe.permissions.has_permission(doctype, "read", user=user) and not frappe.has_permission(doctype, "read"):
-            frappe.throw(f"Guest users are not allowed to access {doctype}", frappe.PermissionError)
-
-   
-    if user != "Guest" and not frappe.has_permission(doctype, "read", user=user):
-        frappe.throw(f"Not permitted to access {doctype}", frappe.PermissionError)
-
- 
+    
+    if not frappe.has_permission(doctype, user=user):
+        frappe.throw("Not permitted", frappe.PermissionError)
+    
+    
     meta = frappe.get_meta(doctype)
     title_field = meta.title_field if meta.title_field else "name"
-
+    
     query_filter = f"%{query}%"
     results = frappe.db.sql(f"""
         SELECT name, {title_field} as title
@@ -63,8 +29,42 @@ def search_in_doctype(doctype, query, limit=10):
         WHERE name LIKE %(query)s OR {title_field} LIKE %(query)s
         LIMIT %(limit)s
     """, {"query": query_filter, "limit": limit}, as_dict=True)
-
+    
     return results
+
+# @frappe.whitelist(allow_guest=True)
+# def search_in_doctype(doctype, query, limit=10):
+#     """
+#     Search within a specified doctype using the Name and Title fields.
+#     Returns a list of matching records if the user has permission.
+#     """
+#     if not doctype or not query:
+#         return []
+
+#     user = frappe.session.user
+
+
+#     if user == "Guest":
+#         if not frappe.permissions.has_permission(doctype, "read", user=user) and not frappe.has_permission(doctype, "read"):
+#             frappe.throw(f"Guest users are not allowed to access {doctype}", frappe.PermissionError)
+
+   
+#     if user != "Guest" and not frappe.has_permission(doctype, "read", user=user):
+#         frappe.throw(f"Not permitted to access {doctype}", frappe.PermissionError)
+
+ 
+#     meta = frappe.get_meta(doctype)
+#     title_field = meta.title_field if meta.title_field else "name"
+
+#     query_filter = f"%{query}%"
+#     results = frappe.db.sql(f"""
+#         SELECT name, {title_field} as title
+#         FROM `tab{doctype}`
+#         WHERE name LIKE %(query)s OR {title_field} LIKE %(query)s
+#         LIMIT %(limit)s
+#     """, {"query": query_filter, "limit": limit}, as_dict=True)
+
+#     return results
 
 
 

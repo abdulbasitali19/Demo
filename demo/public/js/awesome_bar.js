@@ -13,7 +13,7 @@ frappe.search.AwesomeBar = class AwesomeBar {
 
 		this.options = [];
 		this.global_results = [];
-	
+
 		var awesomplete = new Awesomplete(input, {
 			minChars: 0,
 			maxItems: 99,
@@ -62,54 +62,22 @@ frappe.search.AwesomeBar = class AwesomeBar {
 
 		this.awesomplete = awesomplete;
 
-
-
 		$input.on(
 			"input",
 			frappe.utils.debounce(function (e) {
 				var value = e.target.value;
 				var txt = value.trim().replace(/\s\s+/g, " ");
+				var last_space = txt.lastIndexOf(" ");
 				me.global_results = [];
+
 				me.options = [];
-		
+
 				if (txt && txt.length > 1) {
-					var match = txt.match(/^([\w\s]+):([\w\s]+)$/);
-					var doctype = null;
-					var search_term = txt;
-		
-					if (match) {
-						doctype = match[1].trim();
-						search_term = match[2].trim();
+					if (last_space !== -1) {
+						me.set_specifics(txt.slice(0, last_space), txt.slice(last_space + 1));
 					}
-		
-					frappe.call({
-						method: "demo.api.search_in_doctype",
-						// method: "demo.api.global_search",
-						args: { query: search_term, doctype: doctype },
-						callback: function (r) {
-							if (r.message && Object.keys(r.message).length > 0) {
-								var response_doctype = doctype || Object.keys(r.message)[0];  
-								var results = r.message[response_doctype];
-		
-								if (results && results.length > 0) {
-									var item = results[0]; 
-		
-									var formatted_doctype = response_doctype.replace(/\s+/g, "-").toLowerCase();
-									var route = frappe.router.make_url([formatted_doctype, item.name]);
-		
-									window.location.href = route;
-								} else {
-									frappe.msgprint(__("No record found for {0}", [search_term]));
-								}
-							} else {
-								frappe.msgprint(__("No matching records found."));
-							}
-						}
-					});
-		
-					me.set_specifics(search_term, "");  
-					me.add_defaults(search_term);
-					me.options = me.options.concat(me.build_options(search_term));
+					me.add_defaults(txt);
+					me.options = me.options.concat(me.build_options(txt));
 					me.options = me.options.concat(me.global_results);
 				} else {
 					me.options = me.options.concat(
@@ -118,63 +86,12 @@ frappe.search.AwesomeBar = class AwesomeBar {
 					me.options = me.options.concat(frappe.search.utils.get_frequent_links());
 				}
 				me.add_help();
+
 				awesomplete.list = me.deduplicate(me.options);
-			}, 300)
+			}, 100)
 		);
-		
 
 
-
-// 		$input.on(
-// 			"input",
-// 			frappe.utils.debounce(function (e) {
-// 				var value = e.target.value;
-// 				var txt = value.trim().replace(/\s\s+/g, " ");
-// 				me.global_results = [];
-// 				me.options = [];
-// 				if (txt && txt.length > 1) {
-// 					frappe.call({
-// 						// method: "demo.api.global_search",
-// 						method: "demo.api.search_in_doctype",
-// 						args: { query: txt },
-// 						callback: function (r) {
-// 							if (r.message && Object.keys(r.message).length > 0) {
-// 								var doctype = Object.keys(r.message)[0];  
-// 								var results = r.message[doctype];
-		
-// 								if (results && results.length > 0) {
-// 									var item = results[0]; 
-									
-// 									var formatted_doctype = doctype.replace(/\s+/g, "-").toLowerCase();
-// 									var route = frappe.router.make_url([formatted_doctype, item.name]);
-		
-// 									window.location.href = route;
-// 								} else {
-// 									frappe.msgprint(__("No record found for {0}", [txt]));
-// 								}
-// 							} else {
-// 								frappe.msgprint(__("No matching records found."));
-// 							}
-// 						}
-// 					});
-		
-// 					me.set_specifics(txt, "");  
-// 					me.add_defaults(txt);
-// 					me.options = me.options.concat(me.build_options(txt));
-// 					me.options = me.options.concat(me.global_results);
-// 				} else {
-
-// 		  me.options = me.options.concat(
-// 			me.deduplicate(frappe.search.utils.get_recent_pages(txt || ""))
-// 		);
-// 		me.options = me.options.concat(frappe.search.utils.get_frequent_links());
-// 	}
-// 	me.add_help();
-// 	awesomplete.list = me.deduplicate(me.options);
-// }, 100)
-// );
-		
-    
 		var open_recent = function () {
 			if (!this.autocomplete_open) {
 				$(this).trigger("input");
@@ -189,6 +106,66 @@ frappe.search.AwesomeBar = class AwesomeBar {
 		$input.on("awesomplete-close", function (e) {
 			me.autocomplete_open = false;
 		});
+
+		//EDIT fUNCTION
+		debugger;
+		$input.on("keydown", function (e) {
+			if (e.key === "Shift") {
+				e.preventDefault();
+				var value = e.target.value;
+				var txt = value.trim().replace(/\s\s+/g, " ");
+				me.global_results = [];
+				me.options = [];
+		
+				if (txt && txt.length > 1) {
+					var match = txt.match(/^([\w\s]+):([\w\s]+)$/);
+					var doctype = null;
+					var search_term = txt;
+		
+					if (match) {
+						doctype = match[1].trim();
+						search_term = match[2].trim();
+		
+						frappe.call({
+							method: "demo.api.search_in_doctype",
+							args: { query: search_term, doctype: doctype },
+							callback: function (r) {
+								if (r.message && Object.keys(r.message).length > 0) {
+									var response_doctype = doctype || Object.keys(r.message)[0];  
+									var results = r.message[response_doctype];
+		
+									if (results && results.length > 0) {
+										var item = results[0]; 
+		
+										var formatted_doctype = response_doctype.replace(/\s+/g, "-").toLowerCase();
+										var route = frappe.router.make_url([formatted_doctype, item.name]);
+		
+										window.location.href = route;
+									} else {
+										frappe.msgprint(__("No record found for {0}", [search_term]));
+									}
+								} else {
+									frappe.msgprint(__("No matching records found."));
+								}
+							}
+						});
+					}
+		
+					me.set_specifics(search_term, "");  
+					me.add_defaults(search_term);
+					me.options = me.options.concat(me.build_options(search_term));
+					me.options = me.options.concat(me.global_results);
+				} else {
+					me.options = me.options.concat(
+						me.deduplicate(frappe.search.utils.get_recent_pages(txt || ""))
+					);
+					me.options = me.options.concat(frappe.search.utils.get_frequent_links());
+				}
+				me.add_help();
+				awesomplete.list = me.deduplicate(me.options);
+			}
+		});
+		
 
 		$input.on("awesomplete-select", function (e) {
 			var o = e.originalEvent;
