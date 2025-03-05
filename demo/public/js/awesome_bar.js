@@ -118,7 +118,8 @@ frappe.search.AwesomeBar = class AwesomeBar {
 				me.options = [];
 		
 				if (txt && txt.length > 1) {
-					var match = txt.match(/^([\w\s]+):([\w\s]+)$/);
+					var match = txt.match(/^([a-zA-Z0-9\s-]+):([a-zA-Z0-9\s-]+)$/);
+					// var match = txt.match(/^([\w\s]+):([\w\s]+)$/);
 					var doctype = null;
 					var search_term = txt;
 		
@@ -130,13 +131,17 @@ frappe.search.AwesomeBar = class AwesomeBar {
 							method: "demo.api.search_in_doctype",
 							args: { query: search_term, doctype: doctype },
 							callback: function (r) {
+								debugger;
 								if (r.message && Object.keys(r.message).length > 0) {
 									var response_doctype = doctype || Object.keys(r.message)[0];  
-									var results = r.message[response_doctype];
+									// var results = r.message[response_doctype];
+									var results = r.message;
+
+									console.log(results)
 		
 									if (results && results.length > 0) {
 										var item = results[0]; 
-		
+										debugger;	
 										var formatted_doctype = response_doctype.replace(/\s+/g, "-").toLowerCase();
 										var route = frappe.router.make_url([formatted_doctype, item.name]);
 		
